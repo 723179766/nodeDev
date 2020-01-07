@@ -144,9 +144,11 @@
         return true;
     } /* end download() */
 </script>
-<!--<script src="../lib/download2.js"></script>-->
-<a href="http://192.168.1.8:3200/file/test.pdf" target="_blank">不允许访问test.pdf</a>
-<a href="http://192.168.1.8:3200/file1/test.pdf" target="_blank">允许访问test.pdf</a>
+<a href="http://localhost:3200/file/test.pdf" target="_blank">不允许访问test.pdf</a>
+<a href="http://localhost:3200/file1/test.pdf" target="_blank">允许访问test.pdf</a>
+<p></p>
+<a href="http://localhost:3200/file/bigger.jpg" target="_blank">不允许访问bigger.jpg</a>
+<a href="http://localhost:3200/file1/bigger.jpg" target="_blank">允许访问bigger.jpg</a>
 
 <h1 style="color: #64B587">人物介绍</h1>
 {{#each personInfoList}}
@@ -156,31 +158,37 @@
 {{/each}}
 <button onclick="getFile()">获取文件流</button>
 <script>
+    function setCookie(name,value)
+    {
+        var Days = 30;
+        var exp = new Date();
+        exp.setTime(exp.getTime() + Days*24*60*60*1000);
+        document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+    }
+
+    setCookie('token', 'houchaoyu');
+
     function getFile() {
         var xhr = new XMLHttpRequest();
-        xhr.open('post', 'http://192.168.1.8:3200/blobFile', true);
+        xhr.open('post', 'http://localhost:3200/getFileUrl', true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.responseType = "blob";
+        xhr.withCredentials = true;
         xhr.onreadystatechange = function () {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 console.log(xhr);
             }
         };
         xhr.onload = function(oEvent) {
-            download(xhr.response, "鸣人.jpg", "image/jpg" );
-            return
-            let content = xhr.response;
-            var blob = new Blob([content]);
-            if('msSaveOrOpenBlob' in navigator){
-                window.navigator.msSaveOrOpenBlob(blob, "bigger.jpg");
-                return;
-            }
+            console.log('xhr.response', xhr.response);
             var eleLink = document.createElement('a');
-            eleLink.download = "bigger.jpg";
-            eleLink.href = URL.createObjectURL(blob);
+            eleLink.href = JSON.parse(xhr.response).src;
+            eleLink.href = 'http://localhost:3200/file1/bigger.jpg?token=houchaoyu';
+            eleLink.target = '_blank';
+            console.log('eleLink.href', eleLink.href);
             document.body.appendChild(eleLink);
             eleLink.click();
             document.body.removeChild(eleLink);
+            // window.open('http://localhost:3200/file1/bigger.jpg')
         };
         xhr.send();
     }
